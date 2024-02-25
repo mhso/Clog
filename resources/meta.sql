@@ -1,0 +1,4 @@
+CREATE TABLE projects (
+    id NVARCHAR(64) PRIMARY KEY,
+    log_path NVARCHAR(128) NOT NULL
+);

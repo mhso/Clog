@@ -1,0 +1,213 @@
+body {
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+    background-color: #131313;
+}
+
+#login-wrapper {
+    margin: 0 auto;
+    text-align: center;
+}
+
+#login-wrapper > h1 {
+    color: white;
+}
+
+#login-error-msg {
+    color: red;
+}
+
+#content-wrapper {
+    position: relative;
+    color: white;
+    width: 1200px;
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 10px;
+}
+
+#clog-header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    padding-top: 70px;
+}
+
+#clog-home {
+    display: inline-block;
+    position: absolute;
+    left: 0;
+    right: 0;
+    font-size: 3rem;
+}
+
+#clog-home > a {
+    cursor: pointer;
+    text-decoration: none;
+    color: #ff4b4b;
+}
+
+#log-file-select {
+    margin-top: 10px;
+}
+
+#project-select-wrapper {
+    display: inline-block;
+    width: 115px;
+    text-align: right;
+}
+
+p {
+    margin: 0;
+    font-size: 20px;
+}
+
+#project-select {
+    display: inline-block;
+    position: relative;
+    right: 0;
+}
+
+#project-select > select {
+    display: block;
+    margin: 10px 0;
+}
+
+#add-project-wrapper input {
+    width: 100%;
+    margin: 5px 0;
+}
+
+#log-search-header {
+    width: 100%;
+    text-align: right;
+    position: relative;
+    margin-top: 5px;
+    font-size: 18px;
+}
+
+#log-search-header > input, #log-search-header > button {
+    font-size: 18px;
+}
+
+#text-search {
+    width: 86%;
+    margin-right: 5px;
+    padding: 5px 5px;
+    margin-top: 4px;
+}
+
+#text-search-suggestions {
+    text-align: left;
+    margin-top: 10px;
+    position: absolute;
+    background-color: #282828;
+    border: 1px solid;
+    border-top: none;
+    width: 87%;
+    left: 51px;
+    top: 30px;
+}
+
+#text-search-suggestions > div {
+    margin-top: 5px;
+}
+
+.highlighted-search-suggestion {
+    background-color: rgb(8, 78, 255);
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-icon {
+    position: absolute;
+    border: 4px solid #f3f3f3; /* Light grey */
+    border-top: 4px solid #496688; /* Blue */
+    border-radius: 50%;
+    animation: spin 2s linear infinite;
+}
+
+#search-results-loading {
+    width: 100px;
+    height: 100px;
+}
+
+#search-results-wrapper {
+    width: 100%;
+    margin: 0 auto;
+    background-color: #222;
+    padding: 10px;
+    margin-top: 20px;
+    border: 1px solid white;
+}
+
+.included-fields-header {
+    background-color: #373737;
+    padding: 10px;
+}
+
+.log-fields-wrapper {
+    position: absolute;
+    left: 0;
+    display: inline-block;
+    text-align: left;
+    font-size: 20px;
+    width: 260px;
+    background-color: #0e0e0e;
+    border: 1px solid white;
+}
+
+.log-fields-list {
+    padding: 10px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.show-fields-btn {
+    position: absolute;
+    font-size: 20px;
+    cursor: pointer;
+    display: inline-block;
+    margin-left: 5px;
+    right: 10px;
+}
+
+#search-results-list {
+    overflow-y: auto;
+    max-height: 80vh;
+}
+
+.log-field-entry {
+    margin-top: 15px;
+    overflow-x: hidden;
+}
+
+.log-field-entry > label {
+    display: inline-block;
+    max-width: 90%;
+}
+
+.log-result-wrapper {
+    padding: 10px;
+}
+
+.log-result-text {
+    font-weight: 800;
+}
+
+.log-result-body {
+    margin: 10px 0;
+}
+
+.log-result-footer {
+    color: #5396ff;
+    text-align: right;
+}
+
+.d-none {
+    display: none;
+}

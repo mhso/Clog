@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+{% include 'head.html' %}
+
+<body>
+    <div id="content-wrapper">
+        <div id="clog-home">
+            <a  href="{{ url_for('index.index') }}">Clog</a>
+        </div>
+
+        <div id="clog-header">
+            <div id="logfile-select-wrapper">
+                <p>Log File</p>
+                <select id="log-file-select">
+                    {% for log_id in log_files %}
+                    {% set selected = (not log_id and not loop.index) or (log_id and log_id == active_logfile) %}
+                    <option value="{{ log_id }}" {% if selected %}selected {% endif %}onclick="window.location.href='{{ url_for('index.logfile', project_id=active_project, log_id=log_id) }}'">
+                        {{ log_id }}.log
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            {% if active_project %}
+            <!-- Fields and search options -->
+            <div id="log-search-header">
+                {# Included fields
+                <div id="included-log-fields" class="log-fields-wrapper">
+                    <div class="included-fields-header">
+                        <span>Included Fields</span>
+                        <div class="show-fields-btn" onclick="toggleShowFields(event.target, 'included-log-fields')">+</div>
+                    </div>
+
+                    <div class="log-fields-list d-none">
+                        <input id="included-all-check" name="include-all-check" type="checkbox" checked onclick="toggleAllFields(event);">
+                        <label for="include-all-check">All</label>
+
+                        <hr>
+
+                        {% for field, count in log_fields %}
+                        <div class="log-field-entry included-field" data-field="{{ field }}" data-count="{{ count }}">
+                            <input name="{{ field }}_check" type="checkbox" checked onclick="toggleSelectedField(event, 'included-all-check')">
+                            <label for="{{ field }}_check">{{ field }} ({{ count }})</label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>#}
+        
+                <input id="text-search" placeholder="Search Query" onkeydown="textSearchPress(event, '{{ active_project }}', '{{ active_logfile }}')" oninput='textSearchInput(event, {{ log_fields | tojson }})'>
+
+                <button id="search-button" onclick="search('{{ active_project }}', '{{ active_logfile }}')">Search</button>
+                <!-- <button>Date</button>-->
+
+                <div id="text-search-suggestions" class="d-none"></div>
+
+            </div>
+            {% endif %}
+
+            <!-- Select project to show logs for -->
+            <div id="project-select-wrapper">
+                <p>Project</p>
+                <div id="project-select">
+                    <select>
+                        {% for project_id in projects %}
+                        <option value="{{ project_id }}" {% if not loop.index0 %}selected {% endif %}onclick="window.location.href='{{ url_for('index.project', project_id=project_id) }}'">
+                            {{ project_id }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <br>
+
+                <!-- Add project area -->
+                <button onclick="showAddProject()">
+                    Add Project
+                </button>
+        
+                <div id="add-project-wrapper" class="d-none">
+                    <form action="{{ url_for('index.add_project') }}" method="post">
+                        <input name="project_id" placeholder="Project ID">
+                        <input name="log_path" placeholder="Path to log folder">
+
+                        <button>Add</button>
+                        <button onclick="cancelAddProject(event)" type="button">
+                            Cancel
+                        </button>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+
+        {% if active_project %}
+            <!-- Found log entries -->
+            <div id="search-results-wrapper" class="d-none">
+                <div id="search-results-list" class="d-none"></div>
+                <div id="search-results-loading" class="loading-icon"></div>
+                <div id="no-results-placeholder" class="d-none">No log entries found.</div>
+                <div id="search-error" class="d-none">Error during search.</div>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>
