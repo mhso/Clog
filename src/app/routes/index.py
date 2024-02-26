@@ -1,4 +1,5 @@
 from datetime import datetime
+import json
 
 import flask
 
@@ -19,7 +20,7 @@ def index(**project_args):
     meta_database: MetaDatabase = flask.current_app.config["DATABASE"]
     projects = [x[0] for x in meta_database.get_projects()]
 
-    if len(projects) == 1 and "active_project" not in project_args:
+    if "active_project" not in project_args:
         return flask.redirect(flask.url_for("index.project", project_id=projects[0]))
 
     template_args = {"projects": projects}
@@ -35,8 +36,8 @@ def project(project_id, **project_args):
     log_database = LogDatabase(project_id)
     log_files = log_database.get_log_files()
 
-    if len(log_files) == 1 and "active_logfile" not in project_args:
-        return flask.redirect(flask.url_for("index.logfile", project_id=project_id, log_id=log_files[0], **project_args))
+    if "active_logfile" not in project_args:
+        return flask.redirect(flask.url_for("index.logfile", project_id=project_id, log_id=log_files[0]))
 
     return index(active_project=project_id, log_files=log_files, **project_args)
 
@@ -57,23 +58,24 @@ def search(project_id, log_id):
 
     log_database = LogDatabase(project_id)
 
-    args = flask.request.args
-
     results = []
 
-    query = args.get("query")
-    sql = parse_query(query, log_id)
+    query = flask.request.args.get("query")
+    sql, fields = parse_query(query, log_id)
 
     results = log_database.search(log_id, sql)
 
     def format_row(row):
         return {
-            "text": row[0],
-            "entry": row[1],
+            "text": row[0].replace("\n", "<br>"),
+            "entry": json.loads(row[1]),
             "date": datetime.fromtimestamp(row[2]).strftime("%Y-%m-%d %H:%M:%S")
         }
 
-    json_response = {"results": list(map(format_row, results))}
+    json_response = {
+        "results": list(map(format_row, results)),
+        "fields": fields
+    }
 
     return make_json_response(json_response, 200)
 

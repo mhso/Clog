@@ -28,14 +28,12 @@ def ingest_new_lines(log_id: str, log_paths: list[str], database: LogDatabase):
                 if timestamp is None:
                     continue
 
-                message = log_entry["record"]["message"]
-
+                text = log_entry["text"]
                 del log_entry["record"]["time"]
-                del log_entry["text"]
 
                 entry = json.dumps(log_entry["record"])
 
-                entries_to_save.append((message, timestamp, entry))
+                entries_to_save.append((text, timestamp, entry))
 
     if entries_to_save != []:
         logger.info(f"Inserting {len(entries_to_save)} log entries from log file '{log_id}'")

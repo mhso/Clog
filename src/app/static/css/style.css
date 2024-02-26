@@ -124,9 +124,10 @@ p {
 }
 
 .loading-icon {
-    position: absolute;
+    position: relative;
+    margin: 10px auto;
     border: 4px solid #f3f3f3; /* Light grey */
-    border-top: 4px solid #496688; /* Blue */
+    border-top: 4px solid #0066de; /* Blue */
     border-radius: 50%;
     animation: spin 2s linear infinite;
 }
@@ -143,6 +144,26 @@ p {
     padding: 10px;
     margin-top: 20px;
     border: 1px solid white;
+}
+
+.search-error {
+    color: red;
+    font-size: 20px;
+    text-align: center;
+}
+
+.search-result-field {
+    position: relative;
+}
+
+.search-result-value {
+    color: #e0e5ec;
+}
+
+.expand-field-btn {
+    cursor: pointer;
+    margin-left: 10px;
+    font-size: 18px;
 }
 
 .included-fields-header {

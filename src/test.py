@@ -3,9 +3,11 @@ from core.log_database import LogDatabase
 
 database = LogDatabase("intfar")
 
-query = "extra.game"
+query = "extra.event = game_over"
 
-ctes = parse_query(query, "log")
+ctes, fields = parse_query(query, "log")
 
 for result in database.search("log", ctes):
     print(result[1])
+
+print(fields)

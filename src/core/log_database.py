@@ -36,7 +36,7 @@ class LogDatabase(SQLiteDatabase):
                 f"""
                 CREATE TABLE IF NOT EXISTS {log_id} (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    message NVARCHAR NOT NULL,
+                    raw_text NVARCHAR NOT NULL,
                     timestamp REAL NOT NULL,
                     entry NVARCHAR NOT NULL
                 )
@@ -47,7 +47,7 @@ class LogDatabase(SQLiteDatabase):
             self.execute_query(
                 f"""
                 CREATE INDEX IF NOT EXISTS text_index
-                ON {log_id} (message)
+                ON {log_id} (raw_text)
                 """
             )
             self.execute_query(
@@ -76,7 +76,7 @@ class LogDatabase(SQLiteDatabase):
     def add_log_entries(self, log_id: str, entries: list[tuple]):
         with self:
             self.execute_query(
-                f"INSERT INTO {log_id} (message, timestamp, entry) VALUES (?, ?, ?)",
+                f"INSERT INTO {log_id} (raw_text, timestamp, entry) VALUES (?, ?, ?)",
                 *entries
             )
 
@@ -107,10 +107,10 @@ class LogDatabase(SQLiteDatabase):
             return fields
 
     def search(self, log_id, unions: list[list[str]] = None) -> list[str]:
-        if unions == "":
+        if unions == []:
             query = f"""
                 SELECT
-                    message,
+                    raw_text,
                     entry,
                     timestamp
                 FROM
@@ -133,7 +133,7 @@ class LogDatabase(SQLiteDatabase):
 
                 query += f"""
                     SELECT
-                        cond_{conditions}.message,
+                        cond_{conditions}.raw_text,
                         cond_{conditions}.entry,
                         cond_{conditions}.timestamp
                     FROM cond_{conditions}
@@ -155,12 +155,5 @@ class LogDatabase(SQLiteDatabase):
 
             query += f"\nORDER BY {order_by_col} DESC"
 
-            print(query)
-
         with self:
-            # results = []
-            # for message, entry, timestamp in self.execute_query(query, *params):
-            #     if fields is None:
-            #         entry[]
-
             return self.execute_query(query).fetchall()

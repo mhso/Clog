@@ -17,13 +17,14 @@ def _encode_val(val):
 
 _KEYWORDS = set(["==", "=", "!=", "<>", "and", "or"])
 
-def pattern_match(tokens, acc):
+def pattern_match(tokens, acc, matched_fields):
     if tokens == []:
-        return acc
+        return acc, matched_fields
 
     def match_single():
         match tokens:
             case [key, "==", val, *rest] | [key, "=", val, *rest]:
+                matched_fields.append(("key_val", key, val))
                 return f"'{_encode_key(key)}'", f"value = {_encode_val(val)}", rest
 
             case [key, "!=", val, *rest] | [key, "<>", val, *rest]:
@@ -33,29 +34,34 @@ def pattern_match(tokens, acc):
                 return keyword.upper(), None, rest
 
             case [key, keyword, *rest] if keyword.lower() in _KEYWORDS:
+                matched_fields.append(("key", key))
                 return f"'{_encode_key(key)}'", None, [keyword] + rest
 
             case raw_tokens:
-                matched_str = "fullkey LIKE '%"
+                raw_text_tokens = []
                 for index, token in enumerate(raw_tokens):
-                    matched_str += _encode_key(token)
+                    raw_text_tokens.append(token)
 
                     if token in _KEYWORDS:
                         break
 
+                raw_text_tokens = " ".join(raw_text_tokens)
+                matched_str = f"fullkey LIKE '%{raw_text_tokens}%' OR value LIKE '%{raw_text_tokens}%'"
+
+                matched_fields.append(("text", raw_text_tokens))
                 return None, matched_str + "%'", raw_tokens[index + 1:]
 
     json_path, where_clause, rest = match_single()
 
     acc.append((json_path, where_clause))
-    return pattern_match(rest, acc)
+    return pattern_match(rest, acc, matched_fields)
 
 def parse_query(query, log_id):
     if not query:
-        return None
+        return [], []
 
     tokens = query.split(None)
-    parsed = pattern_match(tokens, [])
+    parsed, fields = pattern_match(tokens, [], [])
 
     conditions = 1
     joins = []
@@ -83,7 +89,7 @@ def parse_query(query, log_id):
                 {with_clause} cond_{conditions} AS (
                     SELECT
                         {log_id}.id,
-                        message,
+                        raw_text,
                         entry,
                         timestamp
                     FROM
@@ -96,4 +102,4 @@ def parse_query(query, log_id):
     joins.append(sql)
     unions.append(joins)
 
-    return unions
+    return unions, fields
