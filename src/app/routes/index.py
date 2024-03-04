@@ -65,10 +65,24 @@ def search(project_id, log_id):
 
     results = log_database.search(log_id, sql)
 
+    def stringify_json(elem: dict | list | str | int):
+        if isinstance(elem, dict):
+            for key in elem:
+                elem[key] = stringify_json(elem[key])
+            
+            return elem
+        elif isinstance(elem, list):
+            for index in range(len(elem)):
+                elem[index] = stringify_json(elem[index])
+    
+            return elem
+
+        return str(elem)
+
     def format_row(row):
         return {
             "text": row[0].replace("\n", "<br>"),
-            "entry": json.loads(row[1]),
+            "entry": stringify_json(json.loads(row[1])),
             "date": datetime.fromtimestamp(row[2]).strftime("%Y-%m-%d %H:%M:%S")
         }
 

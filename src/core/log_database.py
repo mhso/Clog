@@ -69,9 +69,9 @@ class LogDatabase(SQLiteDatabase):
                 )
             ]
 
-    def get_entry_count(self, log_id: str):
+    def get_latest_entry(self, log_id: str):
         with self:
-            return self.execute_query(f"SELECT COUNT(*) FROM {log_id}").fetchone()[0]
+            return self.execute_query(f"SELECT MAX(timestamp) FROM {log_id}").fetchone()[0]
 
     def add_log_entries(self, log_id: str, entries: list[tuple]):
         with self:

@@ -5,51 +5,56 @@ function getBaseURL() {
 }
 
 function fieldMatches(key, val, matchedFields) {
+    let matchClass = "field-matches-search";
+
     for (let i = 0; i < matchedFields.length; i++) {
-        let matched = matchedFields[i];
-        if (matched[0] == "key") {
-            return key == matched[1] ? 1 : 0;
+        let matchType = matchedFields[i][0];
+        let matchedKey = matchedFields[i][1];
+        let matchedVal = matchedFields[i][2];
+
+        if (key != null && val != null && typeof(val) != "string") {
+            return "no-matches";
         }
-        else if (matched[0] == "key_val") {
-            return key == matched[1] && val == matched[2] ? 2 : 0;
+
+        if (matchType == "key" && key != null && key == matchedKey) {
+            return matchClass;
         }
-        else if (matched[0] == "text") {
-            return val.includes(matched[1]) ? 3 : 0;
+        else if (matchType == "key_val" && key != null && val != null && key == matchedKey && val == matchedVal) {
+            return matchClass;
+        }
+        else if (matchType == "key_val" && val != null && val == matchedVal) {
+            return matchClass;
+        }
+        else if (matchType == "text" && key != null && key.includes(matchedKey)) {
+            return matchClass;
+        }
+        else if (matchType == "text" && val != null && val.includes(matchedVal)) {
+            return matchClass;
         }
     }
-    return 0;
+    return "no-matches";
 }
 
-function findMatchingKeys(key, val, fields) {
-    if (typeof(val) != "object") {
-        let result = fieldMatches(key, val, fields);
-        
-        if (fieldMatches(key, val, fields)) {
-            return key
-        }
-    }
-    for (let nextKey in val) {
-        let matches = findMatchingKeys(nextKey, val[nextKey]);
-    }
-}
-
-function toggleShowLogEntryResult(toggleBtn, elem) {
+function toggleShowLogEntryResult(toggleBtn, dotDotDotElem, wrapperElem) {
     let parentElem = toggleBtn.parentElement;
-    let wrapper = elem.getElementsByClassName("field-child-wrapper").item(0);
+    let wrapper = wrapperElem.getElementsByClassName("field-child-wrapper").item(0);
 
     if (toggleBtn.textContent == "+") {
         toggleBtn.textContent = "-";
+        toggleBtn.style.marginLeft = "19px";
         toggleBtn.style.color = "red";
         toggleBtn.parentElement.removeChild(toggleBtn);
         parentElem.insertBefore(toggleBtn, wrapper);
+        dotDotDotElem.textContent = "";
     }
     else {
         toggleBtn.textContent = "+";
         toggleBtn.style.color = "green";
+        toggleBtn.style.marginLeft = "10px";
         toggleBtn.parentElement.removeChild(toggleBtn);
         parentElem.appendChild(toggleBtn);
+        dotDotDotElem.textContent = "...";
     }
-
 
     if (wrapper.classList.contains("d-none")) {
         wrapper.classList.remove("d-none");
@@ -59,60 +64,118 @@ function toggleShowLogEntryResult(toggleBtn, elem) {
     }
 }
 
-function createLogEntryFieldResult(header, footer) {
+function createLogEntryFieldResult(header, footer, matchClass) {
     let fieldElem = document.createElement("div");
-    fieldElem.className = "search-result-field";
+    fieldElem.classList.add("search-result-field")
+    fieldElem.classList.add(matchClass);
     let span = document.createElement("span");
     span.textContent = header;
 
     let wrapper = document.createElement("wrapper");
-    wrapper.className = "field-child-wrapper d-none";
+    wrapper.className = "field-child-wrapper";
+    if (matchClass == "no-matches") {
+        wrapper.classList.add("d-none");
+    }
+
+    let dotDotDotSpan = document.createElement("span");
+    dotDotDotSpan.className = "dot-dot-dot";
+    dotDotDotSpan.textContent = matchClass == "no-matches" ? "" : "...";
 
     let btn = document.createElement("span");
-    btn.textContent = "+";
-    btn.style.color = "green";
+    btn.textContent = matchClass == "no-matches" ? "+" : "-";
+    btn.style.color = matchClass == "no-matches" ? "green" : "red";
     btn.className = "expand-field-btn";
     btn.onclick = function() {
-        toggleShowLogEntryResult(btn, fieldElem);
+        toggleShowLogEntryResult(btn, dotDotDotSpan, fieldElem);
     };
 
     let footerElem = document.createElement("span")
     footerElem.textContent = footer;
 
     fieldElem.appendChild(span);
-    fieldElem.appendChild(wrapper);
-    fieldElem.appendChild(footerElem);
-    fieldElem.appendChild(btn);
+    fieldElem.append(dotDotDotSpan);
+    if (matchClass == "no-matches") {
+        fieldElem.appendChild(wrapper);
+        fieldElem.appendChild(footerElem);
+        fieldElem.appendChild(btn);
+    }
+    else {
+        fieldElem.appendChild(btn);
+        fieldElem.appendChild(wrapper);
+        fieldElem.appendChild(footerElem);
+    }
 
     return fieldElem;
 }
 
-function populateLogEntryElem(entry, depth) {
+function populateFieldWrapper(entry, val, fields, depth) {
+    let wrapper = entry.getElementsByClassName("field-child-wrapper").item(0);
+    wrapper.appendChild(populateLogEntryElem(val, fields, depth + 1));
+    if (wrapper.textContent == "") {
+        for (let i = 0; i < entry.children.length; i++) {
+            let child = entry.children[i];
+            if (child.classList.contains("expand-field-btn") || child.classList.contains("dot-dot-dot")) {
+                // If this field  has no children, remove the ability to expand the field
+                entry.removeChild(child);
+                i--;
+            }
+        }
+    }
+}
+
+function populateLogEntryElem(entry, fields, depth) {
     let elem = document.createElement("div");
     elem.style.marginLeft = (depth * 10) + "px";
 
+    if (depth == 0) {
+        elem.classList.add("top-level-search-result-field");
+    }
+
+    let fieldsAtDepth = [];
+    for (let i = 0; i < fields.length; i++) {
+        let matchedKey = fields[i][1].split(".");
+        if (matchedKey.length <= depth) {
+            matchedKey = null;
+        }
+        else {
+            matchedKey = matchedKey[depth];
+        }
+        let matchedVal = fields[i].length == 3 ? fields[i][2] : null;
+        fieldsAtDepth.push([fields[i][0], matchedKey, matchedVal]);
+    }
+
     if (Array.isArray(entry)) {
         entry.forEach((val) => {
-            let fieldElem = createLogEntryFieldResult("[", "]");
-            let wrapper = fieldElem.getElementsByClassName("field-child-wrapper").item(0);
-            wrapper.appendChild(populateLogEntryElem(val, depth + 1));
+            let className = fieldMatches(val, null, fieldsAtDepth);
+            let fieldElem = createLogEntryFieldResult("[", "]", className);
+            populateFieldWrapper(fieldElem, val, fields, depth);
             elem.appendChild(fieldElem);
         });
     }
     else if (entry != null && typeof(entry) == "object") {
         for (let key in entry) {
-            let fieldElem = createLogEntryFieldResult(`${key}: {`, "}");
-            let wrapper = fieldElem.getElementsByClassName("field-child-wrapper").item(0);
-            wrapper.appendChild(populateLogEntryElem(entry[key], depth + 1));
+            let val = entry[key];
+            let className = fieldMatches(key, val, fieldsAtDepth);
+            if (className == "no-matches") {
+                className = fieldMatches(key, null, fieldsAtDepth);
+            }
+
+            let fieldElem = createLogEntryFieldResult(`${key}: {`, "}", className);
+            populateFieldWrapper(fieldElem, val, fields, depth);
+            if (fieldElem.querySelector(".field-child-wrapper .field-matches-search") != null) {
+                fieldElem.classList.add("field-matches-search");
+            }
             elem.appendChild(fieldElem);
         }
     }
     else {
         let valueElem = document.createElement("div");
-        valueElem.className = "search-result-value";
         valueElem.innerHTML = entry == null ? "null" : entry;
+        valueElem.className = "field-value-elem";
+        valueElem.classList.add(fieldMatches(null, entry, fieldsAtDepth));
         elem.appendChild(valueElem);
     }
+
     return elem;
 }
 
@@ -120,17 +183,18 @@ function createSearchResultEntry(data, fields, index) {
     let elem = document.createElement("div");
     elem.classList = "log-result-wrapper";
 
-    let color = index % 2 == 0 ? "#2b2b2b" : "#1c1c1c";
-    elem.style.backgroundColor = color;
+    let mainColor = index % 2 == 0 ? "#2b2b2b" : "#1c1c1c";
+    elem.style.backgroundColor = mainColor;
 
     let header = document.createElement("div");
     header.textContent = data["entry"]["message"];
+    let headerColor = index % 2 == 0 ? "#4f4f4f" : "#363636";
     header.className = "log-result-text";
+    header.style.backgroundColor = headerColor;
 
     data["entry"]["raw_text"] = data["text"];
 
-    let body = populateLogEntryElem(data["entry"], 0);
-    body.className = "log-result-body";
+    let body = populateLogEntryElem(data["entry"], fields, 0);
 
     let footer = document.createElement("div");
     footer.textContent = data["date"];
@@ -200,10 +264,16 @@ function search(projectId, logId) {
             resultEntriesWrapper.innerHTML = "";
             resultEntriesWrapper.classList.remove("d-none");
             let matchedFields = response["fields"];
-            response["results"].forEach(function(entry, index) {
-                let elem = createSearchResultEntry(entry, matchedFields, index);
-                resultEntriesWrapper.appendChild(elem);
-            });
+            try {
+                response["results"].forEach(function(entry, index) {
+                    let elem = createSearchResultEntry(entry, matchedFields, index);
+                    resultEntriesWrapper.appendChild(elem);
+                });
+            }
+            catch (error) {
+                searchError.classList.remove("d-none");
+                console.error(error);
+            }
         }
     });
 }
@@ -292,11 +362,6 @@ function findTextSearchSuggestions(fields, text) {
 }
 
 function textSearchPress(event, projectId, logId) {
-    if (event.key == 'Enter') {
-        search(projectId, logId);
-        return;
-    }
-
     let suggestionsWrapper = document.getElementById("text-search-suggestions");
     let split = event.target.value.split(" ");
 
@@ -305,13 +370,24 @@ function textSearchPress(event, projectId, logId) {
         prevWords = split.slice(0, -1).join(" ") + " ";
     }
 
-    if (event.key == "Tab") {
+    if (event.key == "Tab" || event.key == "Enter") {
         event.preventDefault();
 
-        event.target.value = prevWords + suggestionsWrapper.children[0].textContent;
-        suggestionsWrapper.classList.add("d-none");
+        let highlightedElem = document.getElementsByClassName("highlighted-search-suggestion");
+        if (event.key == "Enter" && suggestionsWrapper.classList.contains("d-none")) {
+            search(projectId, logId);
+        }
+        else if (event.key == "Tab") {
+            if (highlightedElem.length == 1) {
+                event.target.value = prevWords + highlightedElem.item(0).textContent;
+                suggestionsWrapper.classList.add("d-none");
+            }
+            else {
+                event.target.value = prevWords + suggestionsWrapper.children[0].textContent;
+            }
+        }
     }
-    else if (event.key == "ArrowDown") {
+    else if (event.key == "ArrowDown" || event.key == "ArrowUp") {
         event.preventDefault();
 
         let prevHighlightedElem = document.getElementsByClassName("highlighted-search-suggestion");
@@ -319,7 +395,18 @@ function textSearchPress(event, projectId, logId) {
             prevHighlightedElem.item(0).classList.remove("highlighted-search-suggestion");
         }
 
-        textSearchIndex += 1;
+        if (event.key == "ArrowDown") {
+            textSearchIndex += 1;
+            if (textSearchIndex >= suggestionsWrapper.children.length) {
+                textSearchIndex = suggestionsWrapper.children.length - 1;
+            }
+        }
+        else {
+            textSearchIndex -= 1;
+            if (textSearchIndex < 0) {
+                textSearchIndex = 0;
+            }
+        }
 
         let selectedSuggestion = suggestionsWrapper.children[textSearchIndex];
         selectedSuggestion.classList.add("highlighted-search-suggestion");

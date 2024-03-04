@@ -24,7 +24,7 @@ def pattern_match(tokens, acc, matched_fields):
     def match_single():
         match tokens:
             case [key, "==", val, *rest] | [key, "=", val, *rest]:
-                matched_fields.append(("key_val", key, val))
+                matched_fields.append(("key_val", key, str(val)))
                 return f"'{_encode_key(key)}'", f"value = {_encode_val(val)}", rest
 
             case [key, "!=", val, *rest] | [key, "<>", val, *rest]:
@@ -37,23 +37,28 @@ def pattern_match(tokens, acc, matched_fields):
                 matched_fields.append(("key", key))
                 return f"'{_encode_key(key)}'", None, [keyword] + rest
 
+            case [key, *rest] if rest == []:
+                matched_fields.append(("key", key))
+                return f"'{_encode_key(key)}'", None, rest
+
             case raw_tokens:
                 raw_text_tokens = []
                 for index, token in enumerate(raw_tokens):
-                    raw_text_tokens.append(token)
-
-                    if token in _KEYWORDS:
+                    if token.lower() in _KEYWORDS:
+                        index -= 1
                         break
+
+                    raw_text_tokens.append(token)
 
                 raw_text_tokens = " ".join(raw_text_tokens)
                 matched_str = f"fullkey LIKE '%{raw_text_tokens}%' OR value LIKE '%{raw_text_tokens}%'"
 
                 matched_fields.append(("text", raw_text_tokens))
-                return None, matched_str + "%'", raw_tokens[index + 1:]
+                return None, matched_str, raw_tokens[index + 1:]
 
-    json_path, where_clause, rest = match_single()
+    json_path_or_keyword, where_clause, rest = match_single()
 
-    acc.append((json_path, where_clause))
+    acc.append((json_path_or_keyword, where_clause))
     return pattern_match(rest, acc, matched_fields)
 
 def parse_query(query, log_id):
@@ -69,11 +74,11 @@ def parse_query(query, log_id):
     sql = ""
 
     for first, second in parsed:
-        if first == "AND":
+        if first and first.lower() == "and":
             conditions += 1
             sql += ")"
             joins.append(sql)
-        elif first == "OR":
+        elif first and first.lower() == "or":
             conditions += 1
             sql += ")"
             joins.append(sql)

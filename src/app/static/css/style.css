@@ -38,7 +38,7 @@ body {
     display: inline-block;
     position: absolute;
     left: 0;
-    right: 0;
+    top: 15px;
     font-size: 3rem;
 }
 
@@ -108,6 +108,7 @@ p {
     width: 87%;
     left: 51px;
     top: 30px;
+    z-index: 99;
 }
 
 #text-search-suggestions > div {
@@ -146,7 +147,7 @@ p {
     border: 1px solid white;
 }
 
-.search-error {
+#search-error {
     color: red;
     font-size: 20px;
     text-align: center;
@@ -154,6 +155,16 @@ p {
 
 .search-result-field {
     position: relative;
+    padding: 3px;
+}
+
+.top-level-search-result-field {
+    font-size: 18px;
+}
+
+.top-level-search-result-field > .search-result-field {
+    border-bottom: 1px solid white;
+    padding: 10px;
 }
 
 .search-result-value {
@@ -164,6 +175,16 @@ p {
     cursor: pointer;
     margin-left: 10px;
     font-size: 18px;
+}
+
+.top-level-search-result-field > .search-result-field.field-matches-search {
+    border-left: 2px outset #75abff;
+    background-color: #213243;
+    padding: 5px;
+}
+
+.no-matches {
+    font-weight: normal;
 }
 
 .included-fields-header {
@@ -216,8 +237,20 @@ p {
     padding: 10px;
 }
 
+.log-result-wrapper:nth-of-type(1) {
+    border-top: none;
+}
+
+.log-result-wrapper {
+    border-top: solid 1px white;
+}
+
 .log-result-text {
     font-weight: 800;
+    padding: 10px;
+    background-color: #474747;
+    border: 1px solid white;
+    font-size: 20px;
 }
 
 .log-result-body {
@@ -227,6 +260,7 @@ p {
 .log-result-footer {
     color: #5396ff;
     text-align: right;
+    padding: 10px;
 }
 
 .d-none {

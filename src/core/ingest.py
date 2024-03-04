@@ -7,7 +7,7 @@ from core.log_database import LogDatabase
 from mhooge_flask.logging import logger
 
 def ingest_new_lines(log_id: str, log_paths: list[str], database: LogDatabase):
-    entries_in_db = database.get_entry_count(log_id)
+    latest_entry = database.get_latest_entry(log_id)
     curr_line = 0
     entries_to_save = []
 
@@ -16,16 +16,13 @@ def ingest_new_lines(log_id: str, log_paths: list[str], database: LogDatabase):
             for line in fp:
                 curr_line += 1
 
-                if curr_line <= entries_in_db:
-                    continue
-
                 try:
                     log_entry = json.loads(line)
                 except json.JSONDecodeError:
                     continue
 
                 timestamp = log_entry.get("record", {}).get("time", {}).get("timestamp")
-                if timestamp is None:
+                if timestamp is None or (latest_entry is not None and timestamp < latest_entry):
                     continue
 
                 text = log_entry["text"]
